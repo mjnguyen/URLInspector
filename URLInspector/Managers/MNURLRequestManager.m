@@ -28,8 +28,8 @@
 
 - (BOOL)validateURL : (NSString *)data {
     NSURL *testURL = [NSURL URLWithString:data];
-
-    return testURL != nil && ([testURL host]);
+    BOOL supportedScheme = [[testURL scheme] isEqualToString:@"http"] || [[testURL scheme] isEqualToString:@"https"];
+    return (testURL != nil) && supportedScheme && ([testURL host]);
 }
 
 

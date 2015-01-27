@@ -19,6 +19,7 @@
 @dynamic url;
 @dynamic requestId;
 
+
 -(NSNumber *)elapsedTime {
     NSTimeInterval diff = [self.endTime timeIntervalSinceDate:self.startTime];
     return [NSNumber numberWithDouble:diff];

@@ -21,6 +21,8 @@
         return nil;
     }
 
+    // added "text/plain" as a shortcut to allow plain text documents.  Using another subclass of AFHTTPResponseSerializer would be a cleaner way to do this.
+    // for the purpose of this exercise, this should be sufficient
     self.acceptableContentTypes = [NSSet setWithObjects:@"text/html", @"text/plain", nil];
 
     return self;

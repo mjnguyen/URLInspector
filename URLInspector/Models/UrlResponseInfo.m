@@ -18,7 +18,7 @@
         self.timestamp = [NSDate date];
         NSInteger status = [response statusCode];
         self.statusCode = [NSNumber numberWithInteger: status];
-        self.contentLength = [NSNumber numberWithLongLong: [response expectedContentLength]];
+        self.contentLength = [NSNumber numberWithLongLong: [[responseOperation responseData] length]];
         self.requestId = requestIdentifier;
     }
 

@@ -26,73 +26,14 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
 
+    // initialize the AFNetworkManager
     manager = [MNURLRequestManager sharedInstance];
-    [self.goButton addTarget:self action:@selector(submitURLForProcessing:) forControlEvents:UIControlEventTouchUpInside];
-
-
 
 }
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
-}
-
-- (NSString *)createNewObject:(NSString *)url {
-    // generate a new id for the request to track it.
-    NSString *requestId = [[NSUUID UUID] UUIDString];
-
-    NSManagedObjectContext *context = [self.fetchedResultsController managedObjectContext];
-    NSEntityDescription *entity = [[self.fetchedResultsController fetchRequest] entity];
-    NSManagedObject *newManagedObject = [NSEntityDescription insertNewObjectForEntityForName:[entity name] inManagedObjectContext:context];
-    [newManagedObject setValue:[NSDate date] forKey:@"startTime"];
-    [newManagedObject setValue:url  forKey:@"url"];
-    [newManagedObject setValue:requestId forKey:@"requestId"];
-
-    // Save the context.
-    NSError *error = nil;
-    if (![context save:&error]) {
-        // Replace this implementation with code to handle the error appropriately.
-        // abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-        NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
-        abort();
-    }
-
-
-    return requestId;
-}
-
-- (void)updateObject: (NSString *)requestid withData: (UrlResponseInfo *)data {
-    // update the entity with the associated requestId with information from the response
-    NSFetchRequest *request = [[NSFetchRequest alloc] init];
-    NSManagedObjectContext *moc = self.managedObjectContext;
-
-    [request setEntity:[NSEntityDescription entityForName: NSStringFromClass([RequestEvent class]) inManagedObjectContext:moc]];
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"requestId == %@", data.requestId];
-
-    [request setPredicate:predicate];
-    NSError *error = nil;
-    NSArray *results = [moc executeFetchRequest:request error:&error];
-
-    // error handling code
-    if (error != nil) {
-        // if we can't find the entity, then we can just ignore the data coming in
-        NSLog(@"Error updating the URL request (%@) %@", data.requestURI, [error localizedDescription]);
-        error = nil;
-    }
-
-    RequestEvent *matchedEntity = [results firstObject];
-    matchedEntity.responseString = [data responseString];
-    matchedEntity.statusCode = [data statusCode];
-    matchedEntity.endTime   = [data timestamp];
-    matchedEntity.responseSize      = [data contentLength];
-
-    // now update the db with the entity
-
-    if (![moc save:&error]) {
-        // error while saving... can't do much just move on.
-        NSLog(@"Error while updating record! %@", [error localizedDescription]);
-    }
 }
 
 
@@ -106,6 +47,7 @@
         [controller setDetailItem:object];
     }
 }
+
 
 #pragma mark - Table View
 
@@ -146,37 +88,20 @@
 
 - (void)configureCell:(UITableViewCell *)cell atIndexPath:(NSIndexPath *)indexPath {
     RequestEvent *event = (RequestEvent *)[self.fetchedResultsController objectAtIndexPath:indexPath];
-    NSString *displayInfo = [NSString stringWithFormat:@"Fetch %ld: HTTP %@, %3.3fms, %d bytes", (long)indexPath.row, event.statusCode, [[event elapsedTime] doubleValue] , [event.responseSize integerValue] ];
+    NSString *displayInfo = [NSString stringWithFormat:@"Fetch %ld: HTTP %@, %3.0f ms, %ld bytes", (long)indexPath.row, event.statusCode, [[event elapsedTime] doubleValue] * 1000 , (long)[event.responseSize integerValue] ];
     cell.textLabel.text = displayInfo;
 }
 
 
 #pragma mark - UITextFieldDelegates
+
 // prevent text field from adding a new line
 -(BOOL)textFieldShouldReturn:(UITextField *)textField {
     return NO;
 }
 
 
-- (void)clearAllRequestsWithCompletionBlock:(MNGenericCompletionBlock)completionBlock {
-
-    NSError *error;
-    NSArray *matches = nil;
-    NSString *entityName = NSStringFromClass([RequestEvent class]);
-    NSFetchRequest *deleteAll = [NSFetchRequest fetchRequestWithEntityName:entityName];
-    matches = [self.managedObjectContext executeFetchRequest:deleteAll error:&error];
-
-    if ([matches count] > 0) {
-        for (id obj in matches) {
-            [_managedObjectContext deleteObject:obj];
-        }
-
-        [self.managedObjectContext save:&error];
-    }
-
-    completionBlock(YES);
-}
-
+#pragma mark - URL Processing
 
 - (void)enqueueURLRequests : (NSString *)urlToEnqueue {
 
@@ -191,13 +116,33 @@
         // upon failure
         NSLog(@"Request failed!: %@", [error localizedDescription]);
         UrlResponseInfo *responseInfo = [[UrlResponseInfo alloc] initWithHttpOperation: operation requestId:UUID];
+
+        // perhaps do something extra with errors.
+        switch ([error code]) {
+            case -1001:
+                // 404 error
+                NSLog(@"page not found for %@", responseInfo.requestURI);
+                break;
+            case -1003:
+                // Failed DNS lookup
+                NSLog(@"Failed to find hostname for %@", responseInfo.requestURI);
+                break;
+            case -1011:
+                // 500 error
+                NSLog(@"Server error with URI %@", responseInfo.requestURI);
+                break;
+
+            default:
+                break;
+        }
+
         [self updateObject: UUID withData: responseInfo];
 
     } ];
 }
 
 
-- (void)submitURLForProcessing: (id)sender {
+- (IBAction)submitURLForProcessing: (id)sender {
     // GO button was pressed.
     // 1. check to make sure URL entered is valid
     // 2. clear the db of old results
@@ -225,6 +170,99 @@
 }
 
 
+#pragma mark - Core Data Handlers
+
+// clear out all the database of values.
+// for the purposes of this demo, we want a clean slate for every new request.  Otherwise,
+//  the db would grow very quickly.
+//  The need for the completion block is to ensure that deletion happens before anything else.  We want to keep the deletion/addition
+// of objects clean and orderly.
+- (void)clearAllRequestsWithCompletionBlock:(MNGenericCompletionBlock)completionBlock {
+
+    NSError *error;
+    NSArray *matches = nil;
+    NSString *entityName = NSStringFromClass([RequestEvent class]);
+    NSFetchRequest *deleteAll = [NSFetchRequest fetchRequestWithEntityName:entityName];
+    matches = [self.managedObjectContext executeFetchRequest:deleteAll error:&error];
+
+    if ([matches count] > 0) {
+        for (id obj in matches) {
+            [_managedObjectContext deleteObject:obj];
+        }
+
+        [self.managedObjectContext save:&error];
+    }
+
+    completionBlock(YES);
+}
+
+
+// using the time the request was queued for retrieval as start time.
+// if more in depth timing is required, the actual time the URL is requested can be used, this
+// requires the use of notifications.  The controller would need to listen to AFNetworkingDidStartNotification and AFNetworkingOperationDidFinishNotification
+// as is currently used by the AFNetworkingLogger.
+// https://github.com/AFNetworking/AFHTTPRequestOperationLogger/blob/master/AFHTTPRequestOperationLogger.m
+
+- (NSString *)createNewObject:(NSString *)url {
+    // generate a new id for the request to track it.
+    NSString *requestId = [[NSUUID UUID] UUIDString];
+
+    NSManagedObjectContext *context = [self.fetchedResultsController managedObjectContext];
+    NSEntityDescription *entity = [[self.fetchedResultsController fetchRequest] entity];
+    NSManagedObject *newManagedObject = [NSEntityDescription insertNewObjectForEntityForName:[entity name] inManagedObjectContext:context];
+    [newManagedObject setValue:[NSDate date] forKey:@"startTime"];
+    [newManagedObject setValue:url  forKey:@"url"];
+    [newManagedObject setValue:requestId forKey:@"requestId"];
+
+    // Save the context.
+    NSError *error = nil;
+    if (![context save:&error]) {
+        // Replace this implementation with code to handle the error appropriately.
+        // abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
+        NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
+        abort();
+    }
+
+
+    return requestId;
+}
+
+
+// update the saved entity with new data
+- (void)updateObject: (NSString *)requestid withData: (UrlResponseInfo *)data {
+    // update the entity with the associated requestId with information from the response
+    NSFetchRequest *request = [[NSFetchRequest alloc] init];
+    NSManagedObjectContext *moc = self.managedObjectContext;
+
+    [request setEntity:[NSEntityDescription entityForName: NSStringFromClass([RequestEvent class]) inManagedObjectContext:moc]];
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"requestId == %@", data.requestId];
+
+    [request setPredicate:predicate];
+    NSError *error = nil;
+    NSArray *results = [moc executeFetchRequest:request error:&error];
+
+    // error handling code
+    if (error != nil) {
+        // if we can't find the entity, then we can just ignore the data coming in
+        NSLog(@"Error updating the URL request (%@) %@", data.requestURI, [error localizedDescription]);
+        error = nil;
+    }
+
+    RequestEvent *matchedEntity = [results firstObject];
+    matchedEntity.responseString = [data responseString];
+    matchedEntity.statusCode = [data statusCode];
+    matchedEntity.endTime   = [data timestamp];
+    matchedEntity.responseSize      = [data contentLength];
+
+    // now update the db with the entity
+
+    if (![moc save:&error]) {
+        // error while saving... can't do much just move on.
+        NSLog(@"Error while updating record! %@", [error localizedDescription]);
+    }
+}
+
+
 #pragma mark - Fetched results controller
 
 - (NSFetchedResultsController *)fetchedResultsController
@@ -235,7 +273,7 @@
     
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
     // Edit the entity name as appropriate.
-    NSEntityDescription *entity = [NSEntityDescription entityForName:@"RequestEvent" inManagedObjectContext:self.managedObjectContext];
+    NSEntityDescription *entity = [NSEntityDescription entityForName:NSStringFromClass([RequestEvent class]) inManagedObjectContext:self.managedObjectContext];
     [fetchRequest setEntity:entity];
 
     NSPredicate *endTimeFilterPredicate = [NSPredicate predicateWithFormat:@"SELF.endTime > SELF.startTime"];

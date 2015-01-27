@@ -3,7 +3,9 @@
 //  URLInspector
 //
 //  Created by Michael Nguyen on 1/27/15.
-//
+//  Core Data Entity definition
+//  - customized to include elapsedTime, which calculates the time between the start of the request and when it eventually finished.
+// 
 //
 
 #import <Foundation/Foundation.h>

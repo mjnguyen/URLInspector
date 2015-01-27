@@ -3,6 +3,7 @@
 //  URLInspector
 //
 //  Created by Michael Nguyen on 1/25/15.
+// Basic ViewController that uses a TextView to display content from the previous page.
 //
 //
 
@@ -13,6 +14,7 @@
 @end
 
 @implementation DetailViewController
+
 
 #pragma mark - Managing the detail item
 
@@ -29,7 +31,6 @@
     // Update the user interface for the detail item.
     if (self.detailItem) {
         self.detailDescription.text = [[self.detailItem valueForKey:@"responseString"] description];
-//        self.urlLabel.text = [[self.detailItem valueForKey:@"url"] description];
         self.title =[[self.detailItem valueForKey:@"url"] description];
     }
 }

@@ -14,7 +14,6 @@
 
 @interface MasterViewController () {
     NSMutableArray *listOfItems;
-    MNURLRequestManager *manager;
 }
 
 @end
@@ -27,7 +26,7 @@
     // Do any additional setup after loading the view, typically from a nib.
 
     // initialize the AFNetworkManager
-    manager = [[MNURLRequestManager alloc] init];
+    self.manager = [[MNURLRequestManager alloc] init];
 
 }
 
@@ -107,12 +106,14 @@
 
     __block NSString *UUID = [self createNewObject: urlToEnqueue];
 
-    [manager getURL:urlToEnqueue parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    MNURLInspectorResultBlock successBlock = ^(AFHTTPRequestOperation *operation, id responseObject) {
         // upon success add request/response to db
         UrlResponseInfo *responseInfo = [[UrlResponseInfo alloc] initWithHttpOperation: operation requestId:UUID];
         [self updateObject: UUID withData: responseInfo];
 
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+    };
+
+    MNURLInspectorFailureBlock failureBlock = ^(AFHTTPRequestOperation *operation, NSError *error) {
         // upon failure
         NSLog(@"Request failed!: %@", [error localizedDescription]);
         UrlResponseInfo *responseInfo = [[UrlResponseInfo alloc] initWithHttpOperation: operation requestId:UUID];
@@ -137,8 +138,15 @@
         }
 
         [self updateObject: UUID withData: responseInfo];
+        
+    };
 
-    } ];
+    MNURLInspectorRedirectBlock redirectBlock = ^NSURLRequest *(NSURLConnection *connection, NSURLRequest *request, NSURLResponse *redirectResponse) {
+        return request;
+    };
+
+
+    [self.manager getURL:urlToEnqueue parameters:nil success:successBlock failure:failureBlock redirect:redirectBlock];
 }
 
 
@@ -150,7 +158,7 @@
 
     [self.view endEditing:YES];
 
-    if ( [manager validateURL: [self.urlTextField text]]) {
+    if ( [self.manager validateURL: [self.urlTextField text]]) {
         // clear the previous set of results
 
         [self clearAllRequestsWithCompletionBlock: ^(BOOL success) {

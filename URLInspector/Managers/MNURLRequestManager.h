@@ -23,7 +23,7 @@ typedef NSURLRequest* (^MNURLInspectorRedirectBlock)(NSURLConnection *connection
      parameters: (NSArray *)params
         success: (MNURLInspectorResultBlock)successBlock
         failure: (MNURLInspectorFailureBlock)failureBlock
- followRedirect: (BOOL)followRedirect;
+       redirect: (MNURLInspectorRedirectBlock)redirectBlock;
 
 - (BOOL) getURL: (NSString *)url
      parameters: (NSArray *)params

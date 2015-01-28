@@ -29,8 +29,9 @@ typedef void (^MNGenericCompletionBlock)(BOOL success);
 @property (strong, nonatomic) NSFetchedResultsController    *fetchedResultsController;
 @property (strong, nonatomic) NSManagedObjectContext        *managedObjectContext;
 
-@property (strong, nonatomic) MNURLRequestManager           *requestManager;
+@property (strong, nonatomic) MNURLRequestManager           *manager;
 
+- (IBAction)submitURLForProcessing: (id)sender;
 
 @end
 

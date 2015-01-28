@@ -49,7 +49,7 @@
         failure: (MNURLInspectorFailureBlock)failureBlock
 {
 
-    return [self getURL:url parameters:parameters success:successBlock failure:failureBlock followRedirect:YES];
+    return [self getURL:url parameters:parameters success:successBlock failure:failureBlock redirect:nil];
 }
 
 
@@ -57,7 +57,7 @@
      parameters: (NSArray *)parameters
         success: (MNURLInspectorResultBlock)successBlock
         failure: (MNURLInspectorFailureBlock)failureBlock
- followRedirect: (BOOL)followRedirect
+       redirect: (MNURLInspectorRedirectBlock)redirectBlock
 {
     if (![self validateURL:url]) {
         return NO;
@@ -67,20 +67,11 @@
     AFHTTPRequestOperation *requestOperation = [self HTTPRequestOperationWithRequest:request success:successBlock failure:failureBlock];
 
     requestOperation.responseSerializer = manager.responseSerializer;
-    __weak AFHTTPRequestOperation *weakRequestOperation = requestOperation;
 
-    if (!followRedirect ) {
-    [requestOperation setRedirectResponseBlock: ^NSURLRequest *(NSURLConnection *connection, NSURLRequest *request, NSURLResponse *redirectResponse) {
-        if (redirectResponse == nil) {
-            return request;
-        } else {
-            NSLog(@"in redirect, blocking");
-            [weakRequestOperation cancel];
-            return nil;
-        }
-    }];
-
+    if (redirectBlock ) {
+        [requestOperation setRedirectResponseBlock: redirectBlock];
     }
+    
     [manager.operationQueue addOperation:requestOperation];
 
     return YES;

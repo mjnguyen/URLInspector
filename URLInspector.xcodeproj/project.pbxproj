@@ -11,6 +11,10 @@
 		1231E60A1A759AD900A0746D /* MNURLRequestManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1231E6081A759AD900A0746D /* MNURLRequestManager.m */; };
 		1238F2FB1A77FFB7006803AE /* UrlResponseInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 1238F2FA1A77FFB7006803AE /* UrlResponseInfo.m */; };
 		1238F2FF1A780E28006803AE /* RequestEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 1238F2FE1A780E28006803AE /* RequestEvent.m */; };
+		1242D1641A785C6A00E6ACC7 /* RequestEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 1238F2FE1A780E28006803AE /* RequestEvent.m */; };
+		1242D1651A785C6A00E6ACC7 /* MNHtmlSerializer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1276326D1A76CE2300D6E8BB /* MNHtmlSerializer.m */; };
+		1242D1661A785C6A00E6ACC7 /* UrlResponseInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 1238F2FA1A77FFB7006803AE /* UrlResponseInfo.m */; };
+		1242D16A1A785D3E00E6ACC7 /* URLInspector.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 7553912A1A7561B600304A28 /* URLInspector.xcdatamodeld */; };
 		1276326E1A76CE2300D6E8BB /* MNHtmlSerializer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1276326D1A76CE2300D6E8BB /* MNHtmlSerializer.m */; };
 		755391261A7561B600304A28 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 755391251A7561B600304A28 /* main.m */; };
 		755391291A7561B600304A28 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 755391281A7561B600304A28 /* AppDelegate.m */; };
@@ -348,8 +352,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1242D1661A785C6A00E6ACC7 /* UrlResponseInfo.m in Sources */,
 				1231E60A1A759AD900A0746D /* MNURLRequestManager.m in Sources */,
 				755391461A7561B600304A28 /* URLInspectorTests.m in Sources */,
+				1242D1641A785C6A00E6ACC7 /* RequestEvent.m in Sources */,
+				1242D1651A785C6A00E6ACC7 /* MNHtmlSerializer.m in Sources */,
+				1242D16A1A785D3E00E6ACC7 /* URLInspector.xcdatamodeld in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -27,7 +27,7 @@
     // Do any additional setup after loading the view, typically from a nib.
 
     // initialize the AFNetworkManager
-    manager = [MNURLRequestManager sharedInstance];
+    manager = [[MNURLRequestManager alloc] init];
 
 }
 
@@ -162,7 +162,7 @@
     else {
         // alert user that input is invalid and focus on the offending field
         dispatch_async( dispatch_get_main_queue(), ^{
-            [TSMessage showNotificationWithTitle:@"Input Error" subtitle:@"Please double check that you typed in the URL correctly" type:TSMessageNotificationTypeError];
+            [TSMessage showNotificationWithTitle:@"Input Error" subtitle:@"Please double check that you typed in the URL correctly. Perhaps you forgot to add 'http://' or 'https://'" type:TSMessageNotificationTypeError];
         });
 
     }

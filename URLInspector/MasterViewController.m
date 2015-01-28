@@ -27,7 +27,7 @@
     // Do any additional setup after loading the view, typically from a nib.
 
     // initialize the AFNetworkManager
-    manager = [MNURLRequestManager sharedInstance];
+    manager = [[MNURLRequestManager alloc] init];
 
 }
 

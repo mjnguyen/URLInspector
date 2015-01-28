@@ -17,8 +17,6 @@ typedef NSURLRequest* (^MNURLInspectorRedirectBlock)(NSURLConnection *connection
 
 @interface MNURLRequestManager : AFHTTPRequestOperationManager
 
-+(id)sharedInstance;
-
 @property (nonatomic, strong) AFHTTPRequestOperationManager *manager;
 
 - (BOOL) getURL: (NSString *)url

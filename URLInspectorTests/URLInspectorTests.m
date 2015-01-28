@@ -12,13 +12,14 @@
 #import "MNURLRequestManager.h"
 
 @interface URLInspectorTests : XCTestCase {
-    MNURLRequestManager *mgr;
     NSArray *urlContentOKArr, *urlInvalidArr, *urlRedirectArr;
 }
 
+@property (strong, nonatomic)     MNURLRequestManager *mgr;
 @end
 
 @implementation URLInspectorTests
+@synthesize mgr;
 
 - (void)setUp {
     [super setUp];
@@ -28,7 +29,8 @@
 
     // Put setup code here. This method is called before the invocation of each test method in the class.
 
-    mgr = [MNURLRequestManager sharedInstance];
+    mgr = [[MNURLRequestManager alloc] init];
+
 }
 
 - (void)tearDown {
@@ -97,8 +99,8 @@
             NSLog(@"Completed url request for %@", [operation.request URL]);
             NSInteger statusCode = [operation.response statusCode];
 
-            XCTAssertLessThan(statusCode, 400, @"status code returned was not a redirect code!: %d", statusCode);
-            XCTAssertGreaterThanOrEqual(statusCode, 300, @"status code returned was not a redirect code!: %d", statusCode);
+            XCTAssertLessThan(statusCode, 400, @"status code returned was not a redirect code!: %ld", (long)statusCode);
+            XCTAssertGreaterThanOrEqual(statusCode, 300, @"status code returned was not a redirect code!: %ld", (long)statusCode);
 
             [expectation fulfill];
         };

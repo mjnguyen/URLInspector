@@ -15,29 +15,11 @@
 
 @synthesize manager;
 
-+(id)sharedInstance {
-    static MNURLRequestManager *someSharedInstance = nil;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        someSharedInstance = [[self alloc] init];
-    });
-
-    return someSharedInstance;
-}
-
-
-- (BOOL)validateURL : (NSString *)data {
-    NSURL *testURL = [NSURL URLWithString:data];
-    BOOL supportedScheme = [[testURL scheme] isEqualToString:@"http"] || [[testURL scheme] isEqualToString:@"https"];
-    return (testURL != nil) && supportedScheme && ([testURL host]);
-}
-
-
 - init {
     self = [super init];
 
     if ( self != nil) {
-        manager = [AFHTTPRequestOperationManager manager];
+        manager = [[AFHTTPRequestOperationManager alloc] init];
 
         MNHtmlSerializer *htmlSerializer = [MNHtmlSerializer serializer];
         AFJSONResponseSerializer *jsonSerializer = [AFJSONResponseSerializer serializerWithReadingOptions:0];
@@ -48,11 +30,18 @@
 
         [manager.operationQueue setMaxConcurrentOperationCount:10];
 
-        NSLog(@"current set of acceptable content typtes: %@", manager.responseSerializer.acceptableContentTypes);
+        NSLog(@"current set of acceptable content types: %@", manager.responseSerializer.acceptableContentTypes);
     }
 
     return self;
 }
+
+- (BOOL)validateURL : (NSString *)data {
+    NSURL *testURL = [NSURL URLWithString:data];
+    BOOL supportedScheme = [[testURL scheme] isEqualToString:@"http"] || [[testURL scheme] isEqualToString:@"https"];
+    return (testURL != nil) && supportedScheme && ([testURL host]);
+}
+
 
 - (BOOL) getURL: (NSString *)url
      parameters: (NSArray *)parameters
